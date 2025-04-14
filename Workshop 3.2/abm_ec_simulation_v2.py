@@ -79,7 +79,7 @@ for t in range(1, Nt + 1):
         seg_cells, new_seg_cells = realign_polarity(seg, Q, seg_cells, new_seg_cells, w1, w2, w3, w4)
         seg_cells, new_seg_cells = cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, branch_alpha)
 
-        # 调试信息
+        # Debugging information
         num_cells = new_seg_cells[seg]['num_cells']
         pv_shape = new_seg_cells[seg]['polarity_vectors'].shape
         mi_shape = new_seg_cells[seg]['migration_indicators'].shape
@@ -106,6 +106,6 @@ for t in range(1, Nt + 1):
     P, Q, tau = solve_for_flow(G, Pin, Pout, H)
 
     if t % 20 == 0:
-        # 调试信息
+        # Debugging information
         total_cells = sum(seg_cells[seg]['num_cells'] for seg in range(Nseg))
         plot_network(segments, D, P, Q, seg_cells, tau)
