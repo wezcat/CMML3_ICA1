@@ -2,15 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_network(segments, D, P, Q, seg_cells, tau=None):
-    """绘制血管网络，包括压力、流量、直径和细胞极性分布"""
+    """Mapping the vascular network, including pressure, flow, diameter, and cell polarity distribution"""
     
     plt.figure(figsize=(12, 6))
     
-    # 左侧子图：压力、流量和直径网络
+    # Left subgraph: pressure, flow, and diameter networks
     plt.subplot(1, 2, 1)
     plt.title('Pressure, Flow, Diameter of Network')
     
-    # 解包 segments
+    # Unpack segments
     vessel1, vessel2, vessel3, vessel4, vessel5, vessel6 = segments
     
     # Vessel 1 (seg 0-4)
@@ -66,13 +66,13 @@ def plot_network(segments, D, P, Q, seg_cells, tau=None):
     plt.ylabel('Y (µm)')
     plt.axis('equal')
     
-    # 右侧子图：细胞极性分布
+    # Right subgraph: Cell polarity distribution
     plt.subplot(1, 2, 2)
     plt.title('Distribution of Cell Polarity')
     plt.axis([-1, 1, -1, 1])
     plt.grid(True)
     
-    # 绘制每个细胞的极性向量
+    # Plot the polarity vector for each cell
     has_vectors = False
     for seg in range(len(seg_cells)):
         num_cells = seg_cells[seg]['num_cells']
