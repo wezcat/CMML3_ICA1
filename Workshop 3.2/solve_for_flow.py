@@ -4,10 +4,10 @@ from scipy.linalg import solve
 def solve_for_flow(G, Pin, Pout, H):
     Nn = 40
     Nseg = 40
-    G = np.where(G == 0, 1e-25, G)  # 避免 G 为零导致奇异矩阵
+    G = np.where(G == 0, 1e-25, G)  # Avoid G zero resulting in singular matrices
 
-    C = np.zeros((Nn, Nn))  # 系数矩阵
-    B = np.zeros(Nn)  # 右侧向量
+    C = np.zeros((Nn, Nn))  # Coefficient matrix
+    B = np.zeros(Nn)  # Right vector
 
     # Node 0
     C[0,0] = G[0]
@@ -73,9 +73,9 @@ def solve_for_flow(G, Pin, Pout, H):
     C[39,38] = -G[38]
     C[39,39] = G[38] + G[39]
 
-    P = solve(C, B)  # 求解压力
+    P = solve(C, B)  # Solving pressure
 
-    Q = np.zeros(Nseg)  # 计算流量
+    Q = np.zeros(Nseg)  # Calculated flow
     for seg in range(20):
         Q[seg] = -G[seg] * (P[seg+1] - P[seg])
     Q[20] = -G[20] * (P[21] - P[5])
