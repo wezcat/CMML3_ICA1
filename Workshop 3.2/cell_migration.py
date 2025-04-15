@@ -1,7 +1,7 @@
 import numpy as np
 def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, alpha):
-    cell_size = 10e-6  # 迁移距离阈值
-    mchance = 1  # 迁移概率
+    cell_size = 10e-6  # Migration distance threshold
+    mchance = 1  # Migration probability
 
     num_cells = seg_cells[seg]['num_cells']
     if num_cells == 0:
@@ -10,17 +10,17 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
         new_seg_cells[seg]['migration_indicators'] = np.zeros(0, dtype=int)
         return seg_cells, new_seg_cells
 
-    # 初始化迁移指示器
+    # Initializes the migration indicator
     new_seg_cells[seg]['migration_indicators'] = np.zeros(num_cells, dtype=int)
 
-    # 计算迁移意愿（与原代码一致）
+    # Computational migration intention
     for cell in range(num_cells):
         mcell = np.random.rand()
         if mcell <= mchance:
             polar_vect = seg_cells[seg]['polarity_vectors'][:, cell]
             migrate_vect = cell_size * polar_vect
 
-            # 针对不同 vessel 类型
+            # For different vessel types
             if (seg <= 4) or (20 <= seg <= 24):
                 if migrate_vect[1] >= cell_size / 2:
                     new_seg_cells[seg]['migration_indicators'][cell] = 1
@@ -45,13 +45,13 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                     new_seg_cells[seg]['migration_indicators'][cell] = 1
                     migrate[seg] += 1
 
-    # 记录迁移细胞的信息
+    # Record information about migrating cells
     migrating_cells = []
     for cell in range(num_cells):
         if new_seg_cells[seg]['migration_indicators'][cell] != 0:
             migrating_cells.append((cell, new_seg_cells[seg]['migration_indicators'][cell]))
 
-    # Diffusion scheme处理
+    # Diffusion scheme dealing
     down_seg = None
     if seg not in [19, 39]:
         down_seg = seg + 1
@@ -68,16 +68,16 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
             new_seg_cells[seg]['migration_indicators'][idx] = 0
             migrate[seg] -= 1
 
-    # 保存原有num_cells用于后续未迁移细胞处理
+    # Original num_cells are stored for subsequent treatment of unmigrated cells
     original_num_cells = num_cells
 
-    # 分离出未迁移的细胞（indicator == 0）
+    # Unmigrated cells were isolated（indicator == 0）
     remaining_vectors = []
     for cell in range(original_num_cells):
         if new_seg_cells[seg]['migration_indicators'][cell] == 0:
             remaining_vectors.append(seg_cells[seg]['polarity_vectors'][:, cell])
 
-    # 更新当前段信息：仅保留未迁移细胞
+    # New current segment information: Keep only unmigrated cells
     if remaining_vectors:
         new_seg_cells[seg]['polarity_vectors'] = np.column_stack(remaining_vectors)
         new_seg_cells[seg]['num_cells'] = len(remaining_vectors)
@@ -87,11 +87,11 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
         new_seg_cells[seg]['num_cells'] = 0
         new_seg_cells[seg]['migration_indicators'] = np.zeros(0, dtype=int)
 
-    # 处理迁移的细胞（使用之前的 migrating_cells 列表）
+    # Processing migrated cells (using the previous migrating_cells list)
     for cell, direction in migrating_cells:
         cell_vect = seg_cells[seg]['polarity_vectors'][:, cell]
         target = None
-        if direction == 1:  # 向下游迁移
+        if direction == 1:  # Downstream migration
             target = seg + 1 if seg != 19 else 0
             if seg == 19:
                 target = 0
@@ -105,7 +105,7 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                     target = 15 if np.dot(cell_vect, [0, 1]) > np.dot(cell_vect, [1, 0]) else 14
                 elif branch_rule == 4:
                     target = 15 if np.random.rand() < 0.3 else 14
-        elif direction == -1:  # 向上游迁移
+        elif direction == -1:  # upstream migration
             target = seg - 1 if seg != 0 else 19
             if seg == 20:
                 target = 4
@@ -118,7 +118,7 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                 target = 19
 
         if target is not None:
-            # 根据分支调整细胞方向
+            # Adjust cell orientation according to branch
             theta = 0
             if direction == 1:
                 if (seg == 4 and target == 5) or (seg == 24 and target == 25) or \
@@ -133,7 +133,7 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                 elif seg == 0 and target == 19:
                     theta = np.pi
 
-            # 如果需要旋转，更新细胞的极性向量
+            # The fruit needs to rotate to renew the polarity vector of the cell
             if theta != 0:
                 rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
                 cell_vect = rot @ cell_vect
@@ -144,7 +144,7 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                     cell_vect = np.array([1, 0])
                     print(f"Warning: Zero vector detected in seg {seg}, cell {cell}")
 
-            # 将迁移的细胞加入目标段（target）
+            # Migrating cells are added to the target segment（target）
             if new_seg_cells[target]['num_cells'] == 0:
                 new_seg_cells[target]['polarity_vectors'] = cell_vect[:, None]
                 new_seg_cells[target]['migration_indicators'] = np.zeros(1, dtype=int)
@@ -155,6 +155,6 @@ def cell_migration(seg, seg_cells, new_seg_cells, migrate, Q, tau, branch_rule, 
                     new_seg_cells[target]['num_cells'] + 1, dtype=int)
             new_seg_cells[target]['num_cells'] += 1
 
-    # 最后返回更新后的数据结构
+    # The updated data structure is returned
     return seg_cells, new_seg_cells
 
